@@ -41,9 +41,10 @@ class ParserCommand extends Command
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return int|void
+     *
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $viewsCount = [];
         $uniqueViews = [];
@@ -110,5 +111,4 @@ class ParserCommand extends Command
             ));
         }
     }
-
 }

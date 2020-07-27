@@ -1,3 +1,3 @@
-Run the following command to parse the file: 
+1. Run composer install
 
-**php application.php app:parse webserver.log**
+2. Run php application.php app:parse webserver.log 

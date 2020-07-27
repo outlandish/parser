@@ -1,5 +1,4 @@
 <?php
-// application.php
 
 require __DIR__.'/vendor/autoload.php';
 
