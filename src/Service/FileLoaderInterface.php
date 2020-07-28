@@ -7,5 +7,5 @@ interface FileLoaderInterface
     /**
      * @param string $pathToFile
      */
-    public function getFileContent(string $pathToFile);
+    public function getContent(string $pathToFile);
 }

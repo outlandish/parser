@@ -2,9 +2,12 @@
 
 namespace App\Command;
 
-use App\Exception\FileNotFoundException;
 use App\Service\FileLoader;
-use App\Service\ParserHelper;
+use App\Service\FileLoaderInterface;
+use App\Service\FileValidator;
+use App\Service\LogFileContentFormatter;
+use App\Service\OutputWriter;
+use App\Service\TotalViewsCalculator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,27 +16,47 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ParserCommand extends Command
 {
     /**
-     * @var ParserHelper $parserHelper
+     * @var TotalViewsCalculator $calculator
      */
-    private $parserHelper;
+    private $calculator;
     /**
      * @var FileLoader $fileLoader
      */
     private $fileLoader;
     /**
-     * @var string
+     * @var FileLoader $formatter
      */
-    protected static $defaultName = 'app:parse';
+    private $formatter;
+    /**
+     * @var FileValidator $validator
+     */
+    private $validator;
+    /**
+     * @var OutputWriter $writer
+     */
+    private $writer;
 
     /**
-     * @param ParserHelper $parserHelper
-     * @param FileLoader $fileLoader
+     * @param TotalViewsCalculator $calculator
+     * @param FileLoaderInterface $fileLoader
+     * @param LogFileContentFormatter $formatter
+     * @param FileValidator $validator
+     * @param OutputWriter $writer
      * @param string|null $name
      */
-    public function __construct(ParserHelper $parserHelper, FileLoader $fileLoader, string $name = null)
-    {
-        $this->parserHelper = $parserHelper;
+    public function __construct(
+        TotalViewsCalculator $calculator,
+        FileLoaderInterface $fileLoader,
+        LogFileContentFormatter $formatter,
+        FileValidator $validator,
+        OutputWriter $writer,
+        string $name = null
+    ) {
+        $this->calculator = $calculator;
         $this->fileLoader = $fileLoader;
+        $this->formatter = $formatter;
+        $this->validator = $validator;
+        $this->writer = $writer;
 
         parent::__construct($name);
     }
@@ -41,6 +64,7 @@ class ParserCommand extends Command
     protected function configure()
     {
         $this
+            ->setName('app:parse')
             ->setDescription('Parse a log file')
             ->addArgument('path', InputArgument::REQUIRED, 'Path to a file')
         ;
@@ -54,99 +78,38 @@ class ParserCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $viewsCount = [];
-        $uniqueViews = [];
-        $uniqueViewsCount = [];
-
         $pathToFile = $input->getArgument('path');
 
         try {
-            $rows = $this->fileLoader->getFileContentInRows($pathToFile);
-        } catch (FileNotFoundException $e) {
-            $this->showFileNotFoundMessage($pathToFile, $output);
+            $this->validator->validateFile($pathToFile);
+
+            $content = $this->fileLoader->getContent($pathToFile);
+            $rows = $this->formatter->getFileContentInRows($content);
+            $views = $this->calculator->getTotalViewsCountSorted($rows);
+        } catch (\Exception $e) {
+            $this->showMessageOnException($output, $e);
 
             return Command::FAILURE;
         }
 
-        foreach ($rows as $row) {
-            list($url, $ip) = preg_split("/\s+/", $row);
-
-            $viewsCount[$url] = $this->parserHelper->getNextViewsCount($viewsCount, $url);
-
-            if (!isset($uniqueViews[$url])) {
-                $uniqueViews[$url] = [];
-            }
-
-            if (!in_array($ip, $uniqueViews[$url])) {
-                $uniqueViews[$url][] = $ip;
-                $uniqueViewsCount[$url] = $this->parserHelper->getNextViewsCount($uniqueViewsCount, $url);
-            }
-        }
-
-        arsort($viewsCount);
-        arsort($uniqueViewsCount);
-
-        $this->outputViewsCounts($viewsCount, $output);
-        $this->outputUniqueViewsCount($uniqueViewsCount, $output);
+        $this->writer->outputViewsCount(
+            $views[TotalViewsCalculator::VIEWS_KEY],
+            $views[TotalViewsCalculator::UNIQUE_VIEWS_KEY],
+            $output
+        );
 
         return Command::SUCCESS;
     }
 
     /**
-     * @param array $viewsCount
      * @param OutputInterface $output
+     * @param \Exception $e
      */
-    private function outputViewsCounts(array $viewsCount, OutputInterface $output)
-    {
-        $output->writeln([
-            '',
-            'Views',
-            '============',
-        ]);
-
-        foreach ($viewsCount as $url => $count) {
-            $output->writeln(
-                sprintf(
-                    '%s - %d visits',
-                    $url,
-                    $count
-                )
-            );
-        }
-    }
-
-    /**
-     * @param array $uniqueViews
-     * @param OutputInterface $output
-     */
-    private function outputUniqueViewsCount(array $uniqueViews, OutputInterface $output)
-    {
-        $output->writeln([
-            '',
-            'Unique Views',
-            '============',
-        ]);
-
-        foreach ($uniqueViews as $url => $count) {
-            $output->writeln(
-                sprintf(
-                    '%s - %d unique views',
-                    $url,
-                    $count
-                )
-            );
-        }
-    }
-
-    /**
-     * @param string $pathToFile
-     * @param OutputInterface $output
-     */
-    private function showFileNotFoundMessage(string $pathToFile, OutputInterface $output)
+    private function showMessageOnException(OutputInterface $output, \Exception $e)
     {
         $output->writeln([
             '============',
-            'File ' . $pathToFile . ' not found, please check the path is correct',
+            $e->getMessage(),
             '============',
         ]);
     }

@@ -30,7 +30,11 @@ class ParserHelperTest extends TestCase
                 'google.com',
                 6,
             ],
-            [[], 'google.com', 1],
+            [
+                [],
+                'google.com',
+                1,
+            ],
         ];
     }
 
