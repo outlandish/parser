@@ -1,3 +1,13 @@
-1. Run composer install
+How to run the command:
 
-2. Run php application.php app:parse webserver.log 
+        git clone git@github.com:outlandish/parser.git
+        
+        cd parser
+
+        composer install
+
+        php bin/parser.php app:parse webserver.log
+
+How to run the tests:
+
+        php vendor/bin/phpunit --no-configuration --no-configuration src/Tests

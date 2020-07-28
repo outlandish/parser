@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use App\Exception\FileNotFoundException;
+use App\Service\FileLoader;
 use App\Service\ParserHelper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -15,17 +17,23 @@ class ParserCommand extends Command
      */
     private $parserHelper;
     /**
+     * @var FileLoader $fileLoader
+     */
+    private $fileLoader;
+    /**
      * @var string
      */
     protected static $defaultName = 'app:parse';
 
     /**
      * @param ParserHelper $parserHelper
+     * @param FileLoader $fileLoader
      * @param string|null $name
      */
-    public function __construct(ParserHelper $parserHelper, string $name = null)
+    public function __construct(ParserHelper $parserHelper, FileLoader $fileLoader, string $name = null)
     {
         $this->parserHelper = $parserHelper;
+        $this->fileLoader = $fileLoader;
 
         parent::__construct($name);
     }
@@ -50,13 +58,24 @@ class ParserCommand extends Command
         $uniqueViews = [];
         $uniqueViewsCount = [];
 
-        $fileContent = file_get_contents($input->getArgument('path'));
-        $rows = explode("\n", trim($fileContent));
+        $pathToFile = $input->getArgument('path');
+
+        try {
+            $rows = $this->fileLoader->getFileContentInRows($pathToFile);
+        } catch (FileNotFoundException $e) {
+            $this->showFileNotFoundMessage($pathToFile, $output);
+
+            return Command::FAILURE;
+        }
 
         foreach ($rows as $row) {
             list($url, $ip) = preg_split("/\s+/", $row);
 
             $viewsCount[$url] = $this->parserHelper->getNextViewsCount($viewsCount, $url);
+
+            if (!isset($uniqueViews[$url])) {
+                $uniqueViews[$url] = [];
+            }
 
             if (!in_array($ip, $uniqueViews[$url])) {
                 $uniqueViews[$url][] = $ip;
@@ -67,21 +86,17 @@ class ParserCommand extends Command
         arsort($viewsCount);
         arsort($uniqueViewsCount);
 
-        $this->outputViewsCounts(
-            $viewsCount,
-            $uniqueViewsCount,
-            $output
-        );
+        $this->outputViewsCounts($viewsCount, $output);
+        $this->outputUniqueViewsCount($uniqueViewsCount, $output);
 
         return Command::SUCCESS;
     }
 
     /**
      * @param array $viewsCount
-     * @param array $uniqueViews
      * @param OutputInterface $output
      */
-    private function outputViewsCounts(array $viewsCount, array $uniqueViews, OutputInterface $output)
+    private function outputViewsCounts(array $viewsCount, OutputInterface $output)
     {
         $output->writeln([
             '',
@@ -90,13 +105,22 @@ class ParserCommand extends Command
         ]);
 
         foreach ($viewsCount as $url => $count) {
-            $output->writeln(sprintf(
-                '%s - %d visits',
-                $url,
-                $count
-            ));
+            $output->writeln(
+                sprintf(
+                    '%s - %d visits',
+                    $url,
+                    $count
+                )
+            );
         }
+    }
 
+    /**
+     * @param array $uniqueViews
+     * @param OutputInterface $output
+     */
+    private function outputUniqueViewsCount(array $uniqueViews, OutputInterface $output)
+    {
         $output->writeln([
             '',
             'Unique Views',
@@ -104,11 +128,26 @@ class ParserCommand extends Command
         ]);
 
         foreach ($uniqueViews as $url => $count) {
-            $output->writeln(sprintf(
-                '%s - %d unique views',
-                $url,
-                $count
-            ));
+            $output->writeln(
+                sprintf(
+                    '%s - %d unique views',
+                    $url,
+                    $count
+                )
+            );
         }
+    }
+
+    /**
+     * @param string $pathToFile
+     * @param OutputInterface $output
+     */
+    private function showFileNotFoundMessage(string $pathToFile, OutputInterface $output)
+    {
+        $output->writeln([
+            '============',
+            'File ' . $pathToFile . ' not found, please check the path is correct',
+            '============',
+        ]);
     }
 }

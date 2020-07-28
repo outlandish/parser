@@ -9,8 +9,12 @@ class ParserHelperTest extends TestCase
 {
     /**
      * @dataProvider viewsProvider
+     *
+     * @param array $views
+     * @param string $url
+     * @param int $expectedResult
      */
-    public function testNextViewsCount($views, $url, $expectedResult)
+    public function testNextViewsCount(array $views, string $url, int $expectedResult)
     {
         $helper = new ParserHelper();
         $result = $helper->getNextViewsCount($views, $url);
@@ -26,7 +30,7 @@ class ParserHelperTest extends TestCase
                 'google.com',
                 6,
             ],
-            [[], 'google.com', 0],
+            [[], 'google.com', 1],
         ];
     }
 

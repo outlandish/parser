@@ -12,6 +12,6 @@ class ParserHelper
      */
     public function getNextViewsCount(array $viewsCount, string $url): int
     {
-        return isset($viewsCount[$url]) ? $viewsCount[$url] + 1 : 0;
+        return isset($viewsCount[$url]) ? $viewsCount[$url] + 1 : 1;
     }
 }
