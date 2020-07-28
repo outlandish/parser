@@ -10,4 +10,4 @@ How to run the command:
 
 How to run the tests:
 
-        php vendor/bin/phpunit --no-configuration --no-configuration src/Tests
+        php vendor/bin/phpunit --no-configuration src/Tests
