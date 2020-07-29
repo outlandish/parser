@@ -1,20 +1,13 @@
 ## **LogParser**
 
-### Test task for Smart Pension
+Test task for Smart Pension
 
-How to install:
+### How to install:
+    git clone git@github.com:outlandish/parser.git
+    cd parser
+    composer install
+### How to run:
+    php bin/parser.php app:parse webserver.log
 
-        git clone git@github.com:outlandish/parser.git
-        
-        cd parser
-
-        composer install
-        
-How to run:
-                
-        php bin/parser.php app:parse webserver.log
-
-
-How to test:
-
-        php vendor/bin/phpunit --no-configuration src/Tests
+### How to test:
+    php vendor/bin/phpunit --no-configuration src/Tests
