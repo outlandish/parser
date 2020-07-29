@@ -4,7 +4,6 @@ namespace App\Command;
 
 use App\Service\FileLoader;
 use App\Service\FileLoaderInterface;
-use App\Service\FileValidator;
 use App\Service\LogFileContentFormatter;
 use App\Service\OutputWriter;
 use App\Service\TotalViewsCalculator;
@@ -28,10 +27,6 @@ class ParserCommand extends Command
      */
     private $formatter;
     /**
-     * @var FileValidator $validator
-     */
-    private $validator;
-    /**
      * @var OutputWriter $writer
      */
     private $writer;
@@ -40,7 +35,6 @@ class ParserCommand extends Command
      * @param TotalViewsCalculator $calculator
      * @param FileLoaderInterface $fileLoader
      * @param LogFileContentFormatter $formatter
-     * @param FileValidator $validator
      * @param OutputWriter $writer
      * @param string|null $name
      */
@@ -48,14 +42,12 @@ class ParserCommand extends Command
         TotalViewsCalculator $calculator,
         FileLoaderInterface $fileLoader,
         LogFileContentFormatter $formatter,
-        FileValidator $validator,
         OutputWriter $writer,
         string $name = null
     ) {
         $this->calculator = $calculator;
         $this->fileLoader = $fileLoader;
         $this->formatter = $formatter;
-        $this->validator = $validator;
         $this->writer = $writer;
 
         parent::__construct($name);
@@ -81,8 +73,6 @@ class ParserCommand extends Command
         $pathToFile = $input->getArgument('path');
 
         try {
-            $this->validator->validateFile($pathToFile);
-
             $content = $this->fileLoader->getContent($pathToFile);
             $rows = $this->formatter->getFileContentInRows($content);
             $views = $this->calculator->getTotalViewsCountSorted($rows);

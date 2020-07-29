@@ -19,9 +19,8 @@ $application = new Application();
 $application->add(
     new ParserCommand(
         new TotalViewsCalculator(new ParserHelper()),
-        new FileLoader(),
+        new FileLoader(new FileValidator()),
         new LogFileContentFormatter(),
-        new FileValidator(),
         new OutputWriter()
     )
 );
