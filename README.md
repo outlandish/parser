@@ -1,6 +1,6 @@
-## Test task for Smart Pension
+## **LogParser**
 
-Application: **LogParser**
+### Test task for Smart Pension
 
 How to install:
 
