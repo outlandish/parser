@@ -1,13 +1,20 @@
-How to run the command:
+## Test task for Smart Pension
+
+Application: **LogParser**
+
+How to install:
 
         git clone git@github.com:outlandish/parser.git
         
         cd parser
 
         composer install
-
+        
+How to run:
+                
         php bin/parser.php app:parse webserver.log
 
-How to run the tests:
+
+How to test:
 
         php vendor/bin/phpunit --no-configuration src/Tests

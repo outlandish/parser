@@ -87,6 +87,7 @@ class ParserCommand extends Command
             $rows = $this->formatter->getFileContentInRows($content);
             $views = $this->calculator->getTotalViewsCountSorted($rows);
         } catch (\Exception $e) {
+            // On any exception we show a message to the console
             $this->showMessageOnException($output, $e);
 
             return Command::FAILURE;

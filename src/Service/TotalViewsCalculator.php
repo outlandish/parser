@@ -32,9 +32,11 @@ class TotalViewsCalculator
             list($url, $ip) = preg_split("/\s+/", $row);
 
             $viewsCount[$url] = $this->parserHelper->getNextViewsCount($viewsCount, $url);
+            // Unique views are handled separately
             $this->addUniqueView($uniqueViews, $uniqueViewsCount, $url, $ip);
         }
 
+        // Sorting by views count in descending order
         arsort($viewsCount);
         arsort($uniqueViewsCount);
 
@@ -56,10 +58,12 @@ class TotalViewsCalculator
         string $url,
         string $ip
     ) {
+        // If there are no views for the given url we assign it an empty array
         if (!isset($uniqueViews[$url])) {
             $uniqueViews[$url] = [];
         }
 
+        // We increase a unique views count only if there is no visit from the url
         if (!in_array($ip, $uniqueViews[$url])) {
             $uniqueViews[$url][] = $ip;
             $uniqueViewsCount[$url] = $this->parserHelper->getNextViewsCount($uniqueViewsCount, $url);
