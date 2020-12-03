@@ -1,7 +1,5 @@
 ## **LogParser**
 
-Test task for Smart Pension
-
 ### How to install:
     git clone git@github.com:outlandish/parser.git
     cd parser
